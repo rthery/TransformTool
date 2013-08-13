@@ -276,7 +276,7 @@ package com.senocular.display.transform {
 		}
 		
 		/**
-		 * Handler for the MouseEvent.ROLL_OUT event for the control object.
+		 * Handler for the MouseEvent.MOUSE_DOWN event for the control object.
 		 * This is used to determine if the cursor needs to be changed.
 		 */
 		protected function mouseDown(event:MouseEvent):void {
@@ -498,6 +498,26 @@ package com.senocular.display.transform {
 		 */
 		protected function move():void {
 			tool.postTransform.translate(activeX - baseX, activeY - baseY);
+		}
+		
+		/**
+		 * Moves the transform using the current mouse x position along the 
+		 * initial y position of the target (applied to postTransform).
+		 * @param targetY The initial y position of the target when the drag
+		 * on one axis started
+		 */
+		protected function moveXAxis(targetY:Number):void {
+			tool.postTransform.translate(activeX - baseX, targetY);
+		}
+		
+		/**
+		 * Moves the transform using the current mouse y position along the 
+		 * initial x position of the target (applied to postTransform).
+		 * @param targetX The initial y position of the target when the drag
+		 * on one axis started
+		 */
+		protected function moveYAxis(targetX:Number):void {
+			tool.postTransform.translate(targetX, activeY - baseY);
 		}
 		
 		/**

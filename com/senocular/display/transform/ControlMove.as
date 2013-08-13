@@ -34,6 +34,22 @@ package com.senocular.display.transform {
 	 * @author Trevor McCauley
 	 */
 	public class ControlMove extends ControlInteractive {
+		private static const AXIS_LOCK_TOLERANCE:uint = 40;
+		
+		/** 
+		 * Target drag by mouse free to be done in any direction 
+		 */
+		public static const FREE:String = "free";
+		
+		/**
+		 * Target drag by mouse on x axis only.
+		 */
+		public static const X_AXIS:String = "xAxis";
+		
+		/**
+		 * Target drag by mouse on y axis only.
+		 */
+		public static const Y_AXIS:String = "yAxis";
 		
 		/**
 		 * @inheritDoc
@@ -85,6 +101,19 @@ package com.senocular.display.transform {
 		private var _target:DisplayObject;
 		
 		/**
+		 * Move mode for dragging. This can be either X_AXIS, Y_AXIS or FREE.
+		 */
+		public function get mode():String {
+			return _mode;
+		}
+		private var _mode:String;
+		
+		private var _mouseStartLocation:Point = new Point();
+		private var _targetStartLocation:Point = new Point();
+		private var _shiftKeyPressed:Boolean = false;
+		private var _needToGetStartLocation:Boolean = false;
+		
+		/**
 		 * Constructor for creating new ControlMove instances.
 		 * @param	cursor The cursor to be used while interacting with the
 		 * control instance. For ControlMove instances, this cursor is
@@ -93,6 +122,8 @@ package com.senocular.display.transform {
 		 */
 		public function ControlMove(cursor:Cursor = null){
 			super(cursor);
+			
+			_mode = FREE;
 		}
 		
 		/**
@@ -106,10 +137,74 @@ package com.senocular.display.transform {
 		/**
 		 * @inheritDoc
 		 */
+		override protected function activeMouseUp(event:MouseEvent):void {
+			super.activeMouseUp(event);
+			
+			_shiftKeyPressed = false;
+			_mouseStartLocation.x = 0;
+			_mouseStartLocation.y = 0;
+			_mode = FREE;
+		}
+		
+		
+		/**
+		 * @inheritDoc
+		 */
 		override protected function activeMouseMove(event:MouseEvent):void {
 			super.activeMouseMove(event);
 			
-			move();
+			//If we release the shift key, then we stop locking the mouse move on one axis
+			if (_shiftKeyPressed && !event.shiftKey)
+			{
+				_needToGetStartLocation = false;
+				_shiftKeyPressed = false;
+				_mouseStartLocation.x = 0;
+				_mouseStartLocation.y = 0;
+				_mode = FREE;
+			}
+			
+			if (_needToGetStartLocation)
+			{
+				_targetStartLocation.x = mouse.x + offsetMouse.x - baseRegistration.x - event.localX;
+				_targetStartLocation.y = mouse.y + offsetMouse.y - baseRegistration.y - event.localY;
+				
+				_needToGetStartLocation = false;
+			}
+			
+			switch(_mode){
+				case X_AXIS:{
+					moveXAxis(_targetStartLocation.y);
+					break;
+				}
+					
+				case Y_AXIS:{
+					moveYAxis(_targetStartLocation.x);
+					break;
+				}
+					
+				case FREE:
+				default:{
+					//Check if we are trying to move on one axis only
+					if (event.shiftKey)
+					{
+						if (_mouseStartLocation.x == 0 && _mouseStartLocation.y == 0)
+						{
+							_shiftKeyPressed = true;
+							_needToGetStartLocation = true;
+							_mouseStartLocation.x = event.stageX;
+							_mouseStartLocation.y = event.stageY;
+						}	
+						
+						if (Math.abs(_mouseStartLocation.y - event.stageY) > AXIS_LOCK_TOLERANCE)
+							_mode = Y_AXIS
+						if (Math.abs(_mouseStartLocation.x - event.stageX) > AXIS_LOCK_TOLERANCE)
+							_mode = X_AXIS;
+					}
+					
+					move();
+				}
+			}
+			
 			calculateAndUpdate(false);
 		}
 	}
