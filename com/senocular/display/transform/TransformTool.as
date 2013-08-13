@@ -1496,5 +1496,29 @@ package com.senocular.display.transform {
 			calculatedMatrix.c *= ratio;
 			calculatedMatrix.d *= ratio;
 		}
+		
+		
+		/** 
+		 * Set a custom scale for transformation controls (except for 
+		 * the border and the ones for the rotation).
+		 * @param scale The new scale for the controls.
+		 * @param update Indicate if controls should then be updated with their new scale, true by default.
+		 **/
+		public function setControlScale(scale:Number, update:Boolean = true):void {
+			if (!controls)
+				return;
+			
+			var l:uint = controls.length;
+			for (var i:int = 0; i < l; i++) 
+			{
+				if (controls[i] is ControlBorder || controls[i] is ControlUVRotate)
+					continue;
+				
+				controls[i].scaleX = controls[i].scaleY = scale;
+			}
+			
+			if (update)
+				updateControls();
+		}
 	}
 }
